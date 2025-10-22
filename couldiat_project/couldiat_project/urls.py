@@ -2,12 +2,13 @@
 URL Configuration principale pour Couldiat Backend
 """
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
 from drf_yasg import openapi
+from django.http import JsonResponse
 
 # Configuration Swagger
 schema_view = get_schema_view(
@@ -23,6 +24,16 @@ schema_view = get_schema_view(
     permission_classes=[permissions.AllowAny],
 )
 
+# Vue simple pour permettre le téléchargement direct du JSON
+def download_doc(request):
+    """
+    Permet de télécharger la documentation Swagger au format JSON
+    """
+    from drf_yasg.generators import OpenAPISchemaGenerator
+    generator = OpenAPISchemaGenerator(info=schema_view.info)
+    schema = generator.get_schema(request=request, public=True)
+    return JsonResponse(schema, safe=False)
+
 urlpatterns = [
     # Admin Django
     path('admin/', admin.site.urls),
@@ -31,6 +42,9 @@ urlpatterns = [
     path('api/docs/', schema_view.with_ui('swagger', cache_timeout=0), name='schema-swagger-ui'),
     path('api/redoc/', schema_view.with_ui('redoc', cache_timeout=0), name='schema-redoc'),
     
+    # ✅ URL pour télécharger la doc JSON
+    path('api/docs/download/', download_doc, name='download_doc'),
+
     # API Endpoints
     path('auth/', include('accounts.urls')),
     path('concours/', include('concours.urls')),
