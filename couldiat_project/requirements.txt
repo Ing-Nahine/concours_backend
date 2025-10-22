@@ -2,16 +2,19 @@ asgiref==3.10.0
 asttokens==3.0.0
 boto3==1.40.55
 botocore==1.40.55
+class-registry==2.1.2
 decorator==5.2.1
 dj-database-url==3.0.1
 Django==5.2.7
 django-cors-headers==4.9.0
 django-extensions==4.1
+django-filter==25.2
 django-storages==1.14.6
 djangorestframework==3.16.1
 djangorestframework_simplejwt==5.5.1
 drf-yasg==1.21.11
 executing==2.2.1
+filters==1.3.2
 gunicorn==23.0.0
 inflection==0.5.1
 ipython==9.6.0
@@ -33,6 +36,7 @@ python-dateutil==2.9.0.post0
 python-decouple==3.8
 pytz==2025.2
 PyYAML==6.0.3
+regex==2025.9.18
 s3transfer==0.14.0
 six==1.17.0
 sqlparse==0.5.3

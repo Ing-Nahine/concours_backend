@@ -69,13 +69,13 @@ TEMPLATES = [
     },
 ]
 
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://localhost:8081',  # Expo
-    'http://192.168.43.86:8000',  # IP locale pour mobile
-]
+# CORS_ALLOW_CREDENTIALS = True
+# CORS_ALLOWED_ORIGINS = [
+#     'http://localhost:3000',
+#     'http://localhost:5173',
+#     'http://localhost:8081',  # Expo
+#     'http://192.168.43.86:8000',  # IP locale pour mobile
+# ]
 
 WSGI_APPLICATION = 'couldiat_project.wsgi.application'
 
@@ -220,3 +220,5 @@ if not DEBUG:
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
     X_FRAME_OPTIONS = 'DENY'
+    
+    

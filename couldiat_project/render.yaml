@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: couldiat_project
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn couldiat_project.wsgi:application"
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: couldiat_project.settings
+      - key: PYTHON_VERSION
+        value: 3.11
