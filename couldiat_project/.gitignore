@@ -22,6 +22,7 @@ db.sqlite3-journal
 /staticfiles/
 /static/
 /media/
+/accounts/management/commands/*.py
 /accounts/management/commands/create_initial_superuser.py
 # Environment variables
 .env
