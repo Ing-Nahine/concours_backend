@@ -22,7 +22,7 @@ db.sqlite3-journal
 /staticfiles/
 /static/
 /media/
-
+/home/nahine/couldiat_backend/couldiat_project/accounts/management/commands/create_initial_superuser.py
 # Environment variables
 .env
 .env.local
