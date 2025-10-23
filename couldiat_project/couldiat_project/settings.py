@@ -23,7 +23,7 @@ def parse_bool(value):
 DEBUG = parse_bool(config('DEBUG', default='False'))
 
 # ALLOWED_HOSTS
-allowed_hosts_str = config('ALLOWED_HOSTS', default='concours-backend-1.onrender.com,127.0.0.1')
+allowed_hosts_str = config('ALLOWED_HOSTS', default='concours-backend-1.onrender.com,localhost,127.0.0.1')
 ALLOWED_HOSTS = [h.strip() for h in allowed_hosts_str.split(',') if h.strip()]
 
 # APPLICATIONS
