@@ -36,3 +36,6 @@ urlpatterns = [
     path('password-reset/verify/<str:uid>/<str:token>/', PasswordResetVerifyTokenView.as_view(), name='password_reset_verify'),
 
 ]
+
+
+

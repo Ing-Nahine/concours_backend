@@ -1,7 +1,5 @@
-
 """
 Vues pour la réinitialisation de mot de passe
-Version avec envoi d'email asynchrone pour éviter les timeouts
 """
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -16,7 +14,6 @@ from django.conf import settings
 from decouple import config
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
-import threading
 
 from .serializers import (
     PasswordResetRequestSerializer,
@@ -26,34 +23,10 @@ from .serializers import (
 User = get_user_model()
 
 
-def send_email_async(subject, message, from_email, recipient_list, html_message=None):
-    """
-    Envoyer un email en arrière-plan (thread séparé)
-    Évite les timeouts Gunicorn
-    """
-    def send():
-        try:
-            send_mail(
-                subject=subject,
-                message=message,
-                from_email=from_email,
-                recipient_list=recipient_list,
-                html_message=html_message,
-                fail_silently=True,  # Ne pas bloquer si erreur
-            )
-        except Exception as e:
-            print(f"Erreur envoi email: {e}")
-    
-    # Lancer dans un thread séparé
-    thread = threading.Thread(target=send)
-    thread.daemon = True  # Thread daemon = se termine avec le process principal
-    thread.start()
-
-
 class PasswordResetRequestView(APIView):
     """
     Demande de réinitialisation de mot de passe
-    Envoie un email avec un lien de réinitialisation (asynchrone)
+    Envoie un email avec un lien de réinitialisation
     """
     permission_classes = [permissions.AllowAny]
     
@@ -74,39 +47,46 @@ class PasswordResetRequestView(APIView):
         try:
             user = User.objects.get(email=email)
         except User.DoesNotExist:
-            # Pour la sécurité, retourner toujours success
+            # Pour des raisons de sécurité, on retourne toujours success
+            # même si l'email n'existe pas (évite l'énumération d'utilisateurs)
             return Response({
                 "message": "Si cet email existe, un lien de réinitialisation a été envoyé."
             }, status=status.HTTP_200_OK)
         
-        # Générer le token
+        # Générer le token de réinitialisation
         token = default_token_generator.make_token(user)
         uid = urlsafe_base64_encode(force_bytes(user.pk))
         
-        # URL du frontend
+        # URL du frontend pour la réinitialisation
         frontend_url = config('FRONTEND_URL', default='http://localhost:3000')
         reset_url = f"{frontend_url}/reset-password/{uid}/{token}/"
         
-        # Préparer le contexte
+        # Préparer le contexte de l'email
         context = {
             'user': user,
             'reset_url': reset_url,
             'site_name': 'Couldiat',
         }
         
-        # Envoyer l'email en arrière-plan (non bloquant)
-        self._send_password_reset_email_async(user, context)
+        # Envoyer l'email
+        try:
+            self._send_password_reset_email(user, context)
+        except Exception as e:
+            # Logger l'erreur mais ne pas révéler au client
+            print(f"Erreur envoi email: {e}")
         
-        # Retourner immédiatement (sans attendre l'email)
         return Response({
             "message": "Si cet email existe, un lien de réinitialisation a été envoyé."
         }, status=status.HTTP_200_OK)
     
-    def _send_password_reset_email_async(self, user, context):
-        """Envoyer l'email de réinitialisation (asynchrone)"""
+    def _send_password_reset_email(self, user, context):
+        """Envoyer l'email de réinitialisation"""
         subject = "Réinitialisation de votre mot de passe - Couldiat"
         
-        # Version texte simple
+        # Version HTML de l'email
+        html_message = render_to_string('emails/password_reset.html', context)
+        
+        # Version texte simple (fallback)
         text_message = f"""
 Bonjour {user.get_full_name()},
 
@@ -123,19 +103,13 @@ Cordialement,
 L'équipe Couldiat
         """
         
-        # Version HTML (optionnelle)
-        try:
-            html_message = render_to_string('emails/password_reset.html', context)
-        except Exception:
-            html_message = None
-        
-        # Envoyer en arrière-plan
-        send_email_async(
+        send_mail(
             subject=subject,
             message=text_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
-            html_message=html_message
+            html_message=html_message,
+            fail_silently=False,
         )
 
 
@@ -163,7 +137,7 @@ class PasswordResetConfirmView(APIView):
         password = serializer.validated_data['password']
         
         try:
-            # Décoder l'UID
+            # Décoder l'UID pour récupérer l'utilisateur
             user_id = force_str(urlsafe_base64_decode(uid))
             user = User.objects.get(pk=user_id)
         except (TypeError, ValueError, OverflowError, User.DoesNotExist):
@@ -181,17 +155,29 @@ class PasswordResetConfirmView(APIView):
         user.set_password(password)
         user.save()
         
-        # Envoyer email de confirmation (asynchrone)
-        self._send_password_changed_email_async(user)
+        # Envoyer email de confirmation
+        try:
+            self._send_password_changed_email(user)
+        except Exception as e:
+            print(f"Erreur envoi email confirmation: {e}")
         
         return Response({
             "message": "Votre mot de passe a été réinitialisé avec succès."
         }, status=status.HTTP_200_OK)
     
-    def _send_password_changed_email_async(self, user):
-        """Envoyer l'email de confirmation (asynchrone)"""
+    def _send_password_changed_email(self, user):
+        """Envoyer l'email de confirmation de changement"""
         subject = "Votre mot de passe a été modifié - Couldiat"
         
+        context = {
+            'user': user,
+            'site_name': 'Couldiat',
+        }
+        
+        # Version HTML
+        html_message = render_to_string('emails/password_changed.html', context)
+        
+        # Version texte
         text_message = f"""
 Bonjour {user.get_full_name()},
 
@@ -203,29 +189,25 @@ Cordialement,
 L'équipe Couldiat
         """
         
-        try:
-            context = {'user': user, 'site_name': 'Couldiat'}
-            html_message = render_to_string('emails/password_changed.html', context)
-        except Exception:
-            html_message = None
-        
-        send_email_async(
+        send_mail(
             subject=subject,
             message=text_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
             recipient_list=[user.email],
-            html_message=html_message
+            html_message=html_message,
+            fail_silently=False,
         )
 
 
 class PasswordResetVerifyTokenView(APIView):
     """
     Vérifier la validité d'un token de réinitialisation
+    Utile pour valider le lien avant d'afficher le formulaire
     """
     permission_classes = [permissions.AllowAny]
     
     @swagger_auto_schema(
-        operation_description="Vérifier la validité d'un token",
+        operation_description="Vérifier la validité d'un token de réinitialisation",
         manual_parameters=[
             openapi.Parameter('uid', openapi.IN_PATH, type=openapi.TYPE_STRING),
             openapi.Parameter('token', openapi.IN_PATH, type=openapi.TYPE_STRING),
