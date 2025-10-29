@@ -232,15 +232,6 @@ SWAGGER_SETTINGS = {
     'JSON_EDITOR': True,
 }
 
-# ============================================
-# EMAIL CONFIGURATION
-# ============================================
-
-
-# ============================================
-# EMAIL CONFIGURATION
-# ============================================
-
 # Utiliser l'API SendGrid au lieu de SMTP
 USE_SENDGRID_API = parse_bool(config('USE_SENDGRID_API', default='True'))
 
