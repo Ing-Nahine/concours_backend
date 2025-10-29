@@ -24,6 +24,7 @@ db.sqlite3-journal
 /media/
 /accounts/management/commands/*.py
 /accounts/management/commands/create_initial_superuser.py
+couldiat_project/accounts/management/commands/create_initial_superuser.py
 # Environment variables
 .env
 .env.local
