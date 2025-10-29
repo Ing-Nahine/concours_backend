@@ -20,7 +20,7 @@ def parse_bool(value):
         return False
     return str(value).lower() in ('true', '1', 'yes', 'on', 't', 'y')
 
-DEBUG = parse_bool(config('DEBUG', default='True'))
+DEBUG = parse_bool(config('DEBUG', default='False'))
 
 # ALLOWED_HOSTS
 allowed_hosts_str = config('ALLOWED_HOSTS', default='concours-backend-1.onrender.com,localhost,127.0.0.1')
@@ -98,9 +98,9 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('DB_NAME', default='couldiat_db'),
-            'USER': config('DB_USER', default='couldiati'),
-            'PASSWORD': config('DB_PASSWORD', default='couldiatipostgresql'),
+            'NAME': config('DB_NAME', default=''),
+            'USER': config('DB_USER', default=''),
+            'PASSWORD': config('DB_PASSWORD', default=''),
             'HOST': config('DB_HOST', default='localhost'),
             'PORT': config('DB_PORT', default='5432'),
         }
