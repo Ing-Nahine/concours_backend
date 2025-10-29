@@ -126,3 +126,46 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
                 "La taille de la photo ne doit pas dépasser 2MB."
             )
         return value
+    
+    
+"""
+Serializers pour la réinitialisation de mot de passe
+À ajouter dans accounts/serializers.py
+"""
+from rest_framework import serializers
+from django.contrib.auth.password_validation import validate_password
+
+
+class PasswordResetRequestSerializer(serializers.Serializer):
+    """Serializer pour demander une réinitialisation de mot de passe"""
+    email = serializers.EmailField(
+        required=True,
+        help_text="Email de l'utilisateur"
+    )
+
+
+class PasswordResetConfirmSerializer(serializers.Serializer):
+    """Serializer pour confirmer la réinitialisation de mot de passe"""
+    uid = serializers.CharField(required=True)
+    token = serializers.CharField(required=True)
+    password = serializers.CharField(
+        required=True,
+        write_only=True,
+        validators=[validate_password],
+        style={'input_type': 'password'},
+        help_text="Nouveau mot de passe"
+    )
+    password_confirm = serializers.CharField(
+        required=True,
+        write_only=True,
+        style={'input_type': 'password'},
+        help_text="Confirmation du nouveau mot de passe"
+    )
+    
+    def validate(self, attrs):
+        """Valider que les deux mots de passe correspondent"""
+        if attrs['password'] != attrs['password_confirm']:
+            raise serializers.ValidationError({
+                "password": "Les mots de passe ne correspondent pas."
+            })
+        return attrs    

@@ -20,7 +20,7 @@ def parse_bool(value):
         return False
     return str(value).lower() in ('true', '1', 'yes', 'on', 't', 'y')
 
-DEBUG = parse_bool(config('DEBUG', default='False'))
+DEBUG = parse_bool(config('DEBUG', default='True'))
 
 # ALLOWED_HOSTS
 allowed_hosts_str = config('ALLOWED_HOSTS', default='concours-backend-1.onrender.com,localhost,127.0.0.1')
@@ -68,7 +68,7 @@ ROOT_URLCONF = 'couldiat_project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR/'templates'],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -234,6 +234,16 @@ SWAGGER_SETTINGS = {
 
 # Email Configuration (pour notifications futures)
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# === Email Configuration ===
+EMAIL_BACKEND='django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST='smtp.gmail.com'
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER='combarinahine@gmail.com'
+EMAIL_HOST_PASSWORD='ijhzfsdicdptouuu'
+DEFAULT_FROM_EMAIL='combarinahine@gmail.com'
+
 
 # Security Settings (Production)
 if not DEBUG:
