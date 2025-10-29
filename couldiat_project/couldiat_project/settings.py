@@ -232,18 +232,40 @@ SWAGGER_SETTINGS = {
     'JSON_EDITOR': True,
 }
 
-# Email Configuration (pour notifications futures)
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# ============================================
+# EMAIL CONFIGURATION
+# ============================================
 
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+# Email Backend
+EMAIL_BACKEND = config(
+    'EMAIL_BACKEND', 
+    default='django.core.mail.backends.smtp.EmailBackend'
+)
+
+# SendGrid SMTP Configuration
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.sendgrid.net')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+
+# SendGrid Credentials
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='apikey')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='noreply@couldiat.com')
 
+# Email Timeout (éviter les timeouts)
+EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
 
+# From Email
+DEFAULT_FROM_EMAIL = config(
+    'DEFAULT_FROM_EMAIL', 
+    default='Couldiat <noreply@couldiat.com>'
+)
+
+# Server Email (pour les erreurs)
+SERVER_EMAIL = config('SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
+
+# Frontend URL (pour les liens de reset)
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
 # Security Settings (Production)
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
