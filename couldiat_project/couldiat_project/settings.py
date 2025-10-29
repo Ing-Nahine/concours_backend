@@ -236,24 +236,31 @@ SWAGGER_SETTINGS = {
 # EMAIL CONFIGURATION
 # ============================================
 
-# Email Backend
-EMAIL_BACKEND = config(
-    'EMAIL_BACKEND', 
-    default='django.core.mail.backends.smtp.EmailBackend'
-)
 
-# SendGrid SMTP Configuration
-EMAIL_HOST = config('EMAIL_HOST', default='smtp.sendgrid.net')
-EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+# ============================================
+# EMAIL CONFIGURATION
+# ============================================
 
-# SendGrid Credentials
-EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='apikey')
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+# Utiliser l'API SendGrid au lieu de SMTP
+USE_SENDGRID_API = parse_bool(config('USE_SENDGRID_API', default='True'))
 
-# Email Timeout (éviter les timeouts)
-EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=int)
+if USE_SENDGRID_API:
+    # Backend API SendGrid (recommandé pour production)
+    EMAIL_BACKEND = 'couldiat_project.sendgrid_backend.SendGridAPIBackend'
+    SENDGRID_API_KEY = config('SENDGRID_API_KEY', default='')
+else:
+    # Backend SMTP traditionnel
+    EMAIL_BACKEND = config(
+        'EMAIL_BACKEND', 
+        default='django.core.mail.backends.smtp.EmailBackend'
+    )
+    EMAIL_HOST = config('EMAIL_HOST', default='smtp.sendgrid.net')
+    EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+    EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+    EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+    EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='apikey')
+    EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+    EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=30, cast=int)
 
 # From Email
 DEFAULT_FROM_EMAIL = config(
@@ -266,6 +273,7 @@ SERVER_EMAIL = config('SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
 
 # Frontend URL (pour les liens de reset)
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+
 # Security Settings (Production)
 if not DEBUG:
     SECURE_SSL_REDIRECT = True
