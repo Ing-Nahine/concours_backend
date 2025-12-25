@@ -20,7 +20,7 @@ def parse_bool(value):
         return False
     return str(value).lower() in ('true', '1', 'yes', 'on', 't', 'y')
 
-DEBUG = parse_bool(config('DEBUG', default='False'))
+DEBUG = parse_bool(config('DEBUG', default='True'))
 
 # ALLOWED_HOSTS
 allowed_hosts_str = config('ALLOWED_HOSTS', default='concours-backend-1.onrender.com,localhost,127.0.0.1')
