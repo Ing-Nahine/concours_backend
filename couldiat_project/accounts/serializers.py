@@ -1,5 +1,5 @@
 """
-Serializers pour l'application Accounts
+Serializers pour l'application Accounts - Version Complète
 """
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
@@ -126,28 +126,46 @@ class UpdateProfileSerializer(serializers.ModelSerializer):
                 "La taille de la photo ne doit pas dépasser 2MB."
             )
         return value
-    
-    
-"""
-Serializers pour la réinitialisation de mot de passe
-À ajouter dans accounts/serializers.py
-"""
-from rest_framework import serializers
-from django.contrib.auth.password_validation import validate_password
 
+
+# ============================================================================
+# NOUVEAUX SERIALIZERS POUR LA RÉINITIALISATION DE MOT DE PASSE
+# ============================================================================
 
 class PasswordResetRequestSerializer(serializers.Serializer):
-    """Serializer pour demander une réinitialisation de mot de passe"""
+    """Serializer pour demander un code de réinitialisation"""
     email = serializers.EmailField(
         required=True,
-        help_text="Email de l'utilisateur"
+        help_text="Adresse email du compte"
     )
 
 
+class PasswordResetVerifyCodeSerializer(serializers.Serializer):
+    """Serializer pour vérifier le code de réinitialisation"""
+    email = serializers.EmailField(
+        required=True,
+        help_text="Adresse email du compte"
+    )
+    code = serializers.CharField(
+        required=True,
+        min_length=6,
+        max_length=6,
+        help_text="Code à 6 chiffres reçu par email"
+    )
+    
+    def validate_code(self, value):
+        """Vérifier que le code ne contient que des chiffres"""
+        if not value.isdigit():
+            raise serializers.ValidationError("Le code doit contenir uniquement des chiffres.")
+        return value
+
+
 class PasswordResetConfirmSerializer(serializers.Serializer):
-    """Serializer pour confirmer la réinitialisation de mot de passe"""
-    uid = serializers.CharField(required=True)
-    token = serializers.CharField(required=True)
+    """Serializer pour confirmer la réinitialisation avec le nouveau mot de passe"""
+    reset_token = serializers.CharField(
+        required=True,
+        help_text="Token de réinitialisation obtenu après vérification du code"
+    )
     password = serializers.CharField(
         required=True,
         write_only=True,
@@ -163,9 +181,9 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     )
     
     def validate(self, attrs):
-        """Valider que les deux mots de passe correspondent"""
+        """Vérifier que les deux mots de passe correspondent"""
         if attrs['password'] != attrs['password_confirm']:
             raise serializers.ValidationError({
-                "password": "Les mots de passe ne correspondent pas."
+                "password_confirm": "Les mots de passe ne correspondent pas."
             })
-        return attrs    
+        return attrs

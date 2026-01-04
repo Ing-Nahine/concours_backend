@@ -20,7 +20,7 @@ def parse_bool(value):
         return False
     return str(value).lower() in ('true', '1', 'yes', 'on', 't', 'y')
 
-DEBUG = parse_bool(config('DEBUG', default='false'))
+DEBUG = parse_bool(config('DEBUG', default='true'))
 
 # ALLOWED_HOSTS
 allowed_hosts_str = config('ALLOWED_HOSTS', default='concours-backend-1.onrender.com,localhost,127.0.0.1')
@@ -215,6 +215,34 @@ CORS_ALLOW_HEADERS = [
     'x-requested-with',
 ]
 
+# ============================================================================
+# CACHE CONFIGURATION (pour les codes OTP de réinitialisation)
+# ============================================================================
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'couldiat-cache',
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000
+        }
+    }
+}
+
+# En production avec Redis (optionnel mais recommandé)
+# Décommenter si tu installes Redis
+# if not DEBUG:
+#     CACHES = {
+#         'default': {
+#             'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+#             'LOCATION': config('REDIS_URL', default='redis://127.0.0.1:6379/1'),
+#             'OPTIONS': {
+#                 'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#             },
+#             'KEY_PREFIX': 'couldiat',
+#             'TIMEOUT': 300,
+#         }
+#     }
+
 # File Upload Settings
 FILE_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10 * 1024 * 1024  # 10MB
@@ -232,24 +260,23 @@ SWAGGER_SETTINGS = {
     'JSON_EDITOR': True,
 }
 
-# Utiliser l'API SendGrid au lieu de SMTP
-USE_SENDGRID_API = parse_bool(config('USE_SENDGRID_API', default='True'))
+# ============================================================================
+# EMAIL CONFIGURATION
+# ============================================================================
+USE_SENDGRID_API = parse_bool(config('USE_SENDGRID_API', default='False'))
 
 if USE_SENDGRID_API:
     # Backend API SendGrid (recommandé pour production)
     EMAIL_BACKEND = 'couldiat_project.sendgrid_backend.SendGridAPIBackend'
     SENDGRID_API_KEY = config('SENDGRID_API_KEY', default='')
 else:
-    # Backend SMTP traditionnel
-    EMAIL_BACKEND = config(
-        'EMAIL_BACKEND', 
-        default='django.core.mail.backends.smtp.EmailBackend'
-    )
-    EMAIL_HOST = config('EMAIL_HOST', default='smtp.sendgrid.net')
+    # Backend SMTP (Gmail ou autre)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
     EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
     EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
     EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
-    EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='apikey')
+    EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
     EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
     EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=30, cast=int)
 
@@ -265,8 +292,21 @@ SERVER_EMAIL = config('SERVER_EMAIL', default=DEFAULT_FROM_EMAIL)
 # Frontend URL (pour les liens de reset)
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
 
-# Security Settings (Production)
-if not DEBUG:
+# ============================================================================
+# SECURITY SETTINGS
+# ============================================================================
+if DEBUG:
+    # Développement - Force HTTP
+    SECURE_SSL_REDIRECT = False
+    SESSION_COOKIE_SECURE = False
+    CSRF_COOKIE_SECURE = False
+    SECURE_BROWSER_XSS_FILTER = False
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 0
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = False
+    SECURE_HSTS_PRELOAD = False
+else:
+    # Production - Force HTTPS
     SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True

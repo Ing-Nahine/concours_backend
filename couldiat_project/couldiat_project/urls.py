@@ -16,7 +16,7 @@ schema_view = get_schema_view(
         default_version='v1',
         description="Documentation de l'API Couldiat - Plateforme de gestion de concours",
         terms_of_service="https://www.couldiat.com/terms/",
-        contact=openapi.Contact(email="contact@couldiat.com"),
+        contact=openapi.Contact(email="couldiatiformation@gmail.com"),
         license=openapi.License(name="Couldiati"),
     ),
     public=True,
