@@ -44,6 +44,8 @@ class SendGridAPIBackend(BaseEmailBackend):
         """
         if not self.api_key:
             logger.error("❌ SENDGRID_API_KEY manquant - email non envoyé")
+            if not self.fail_silently:
+                raise ValueError("SENDGRID_API_KEY manquant")
             return False
         
         try:
@@ -84,6 +86,8 @@ class SendGridAPIBackend(BaseEmailBackend):
                 "Content-Type": "application/json"
             }
             
+            logger.info(f"📤 Tentative d'envoi email à {message.to}")
+            
             response = requests.post(
                 self.api_url,
                 headers=headers,
@@ -91,34 +95,56 @@ class SendGridAPIBackend(BaseEmailBackend):
                 timeout=30
             )
             
-            # Vérifier le statut
+            # Vérifier le statut - CORRECTION ICI
             if response.status_code in [200, 202]:
                 logger.info(f"✅ Email envoyé avec succès à {message.to}")
+                print(f"✅ Email SendGrid envoyé avec succès à {message.to}")
                 return True
             else:
+                # IMPORTANT: Afficher l'erreur complète
                 error_msg = f"SendGrid API Error {response.status_code}: {response.text}"
                 logger.error(f"❌ {error_msg}")
+                print(f"❌ {error_msg}")
+                
+                # CORRECTION: Lever une exception si fail_silently=False
                 if not self.fail_silently:
-                    print(f"❌ {error_msg}")
+                    raise Exception(error_msg)
+                
                 return False
                 
         except requests.exceptions.Timeout:
-            error_msg = "Timeout lors de l'appel à l'API SendGrid"
+            error_msg = "⏱️ Timeout lors de l'appel à l'API SendGrid"
             logger.error(f"❌ {error_msg}")
+            print(f"❌ {error_msg}")
+            
             if not self.fail_silently:
-                print(f"❌ {error_msg}")
+                raise Exception(error_msg)
+            return False
+            
+        except requests.exceptions.RequestException as e:
+            error_msg = f"🌐 Erreur réseau SendGrid: {e}"
+            logger.error(f"❌ {error_msg}")
+            print(f"❌ {error_msg}")
+            
+            if not self.fail_silently:
+                raise
             return False
             
         except Exception as e:
             logger.error(f"❌ Erreur SendGrid API: {e}")
+            print(f"❌ Erreur SendGrid API: {e}")
+            
             if not self.fail_silently:
-                print(f"❌ Erreur SendGrid API: {e}")
+                raise
             return False
     
     def _extract_email(self, email_string):
         """
         Extrait l'email de 'Name <email@example.com>'
         """
+        if not email_string:
+            return settings.DEFAULT_FROM_EMAIL
+            
         if '<' in email_string and '>' in email_string:
             return email_string.split('<')[1].split('>')[0].strip()
         return email_string.strip()
@@ -127,6 +153,9 @@ class SendGridAPIBackend(BaseEmailBackend):
         """
         Extrait le nom de 'Name <email@example.com>'
         """
+        if not email_string:
+            return ""
+            
         if '<' in email_string:
             return email_string.split('<')[0].strip()
         return ""
