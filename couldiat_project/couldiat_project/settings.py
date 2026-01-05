@@ -184,16 +184,19 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
 
-# CORS Configuration
+# ============================================================================
+# CORS CONFIGURATION
+# ============================================================================
 CORS_ALLOW_CREDENTIALS = True
 
-# Parse CORS_ALLOWED_ORIGINS
-cors_origins = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000')
+# Parse CORS_ALLOWED_ORIGINS from environment variable
+cors_origins = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000,http://localhost:5173')
 CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(',') if origin.strip()]
 
-# En développement, autoriser toutes les origines
-if DEBUG:
-    CORS_ALLOW_ALL_ORIGINS = True
+# Option flexible : permet de contrôler CORS_ALLOW_ALL_ORIGINS via variable d'environnement
+# En développement ou pour les tests, mettre CORS_ALLOW_ALL_ORIGINS=true sur Render
+# En production finale, mettre CORS_ALLOW_ALL_ORIGINS=false et lister les domaines dans CORS_ALLOWED_ORIGINS
+CORS_ALLOW_ALL_ORIGINS = parse_bool(config('CORS_ALLOW_ALL_ORIGINS', default='True'))
 
 CORS_ALLOW_METHODS = [
     'DELETE',
@@ -203,6 +206,7 @@ CORS_ALLOW_METHODS = [
     'POST',
     'PUT',
 ]
+
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
